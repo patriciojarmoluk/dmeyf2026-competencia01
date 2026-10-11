@@ -17,13 +17,13 @@
 #      midiendo AUC, sin undersampling y sin las variables de préstamos personales.
 #   6. Curva de ganancia en 202106, para decidir cuántos estímulos enviar.
 #   7. Modelo final: entrena en 202103-202106 con las variables de préstamos
-#      reincorporadas. Ensamble de 50 LightGBM que solo difieren en la semilla;
+#      reincorporadas. Ensamble de 30 LightGBM que solo difieren en la semilla;
 #      se promedian sus probabilidades y se predice 202108.
 #   8. Genera el archivo de la entrega: los numero_de_cliente con mayor probabilidad.
 #
-# Dónde corre: en la VM de Google Cloud (8 vCPU). Usa las carpetas
+# Dónde corre: en la VM de Google Cloud. Usa las carpetas
 #   ~/datasets  y  ~/buckets/b1/exp , y las crea si no existen.
-# Cuánto tarda: unas 13 horas (1 h la optimización, casi 12 h los 50 modelos).
+# Cuánto tarda: unas 9 horas (1 h la optimización, media hora la curva de junio, 7 h los 30 modelos).
 # Si se corta: se vuelve a correr desde el principio. La optimización terminada, la
 #   curva de junio y cada modelo ya entrenado quedan guardados y no se repiten.
 # Reproducibilidad: todas las semillas salen de la semilla primigenia (123457) y LightGBM
@@ -88,13 +88,13 @@ primos_entre <- function(desde, hasta) {          # criba de Eratóstenes
 }
 set.seed(PARAM$semilla_primigenia, kind= "Mersenne-Twister", normal.kind= "Inversion", sample.kind= "Rejection")
 PARAM$semillas <- sample(primos_entre(100000, 1000000), 50)
-PARAM$cantidad_semillas <- 50     # modelos del ensamble final: se usan las primeras 50 semillas de la lista
+PARAM$cantidad_semillas <- 30     # modelos del ensamble final: se usan las primeras 30 semillas de la lista
 PARAM$junio_semillas <- 5         # modelos que se promedian para la curva de ganancia de 202106
 cat("Semillas del ensamble:", PARAM$semillas, "\n")
 
 # Cantidad de estímulos a enviar
 PARAM$cortes <- seq(10000, 13500, by= 250)   # se genera un archivo por cada uno, para compararlos en el bot
-PARAM$corte_entrega <- 12000                 # el que se entrega
+PARAM$corte_entrega <- 11250                 # el que se entrega
 PARAM$archivo_entrega <- "entrega_final_competencia01.csv"
 
 # Ganancia de la campaña, por cliente al que se le envía el estímulo
@@ -311,7 +311,7 @@ gc(full=TRUE, verbose=FALSE)
 # ------------------------------------------------------------------------------
 # 3e. TENDENCIA Y PROMEDIO DE LOS ÚLTIMOS 3 MESES, CALCULADOS SOBRE LOS RANKINGS
 # Las dos funciones que siguen son el código de Feature Engineering Histórico
-# que publicó Gustavo Denicolay, sin modificar.
+# que publicó Gustavo en Zulip, sin modificar.
 # Para cada variable original se agregan:
 #   <variable>_tend3 : pendiente de la recta que ajusta los últimos 3 meses
 #   <variable>_avg3  : promedio de los últimos 3 meses
@@ -611,7 +611,7 @@ if (PARAM$junio_semillas > 0 && !file.exists("curva_junio.txt")) {
   prob_junio <- rep(0, nrow(mvalidate))
   for (i in 1:PARAM$junio_semillas) {
     cat(">> Junio: modelo", i, "de", PARAM$junio_semillas, "|", format(Sys.time(), "%H:%M"), "\n")
-    param_final$seed <- semillas_ensamble[i]
+    param_final$seed <- PARAM$semillas[i]      # las primeras semillas de la lista
     prob_junio <- prob_junio + predict(lgb.train(data = dtrain, param = param_final), mvalidate)
   }
   ganancia_junio <- curva_ganancia(prob_junio, validate_clase)
