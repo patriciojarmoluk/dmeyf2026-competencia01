@@ -47,7 +47,7 @@ Si la corrida se corta, se vuelve a lanzar desde el principio. La optimización 
 5. Optimización de hiperparámetros con `mlr3mbo`: entrena en 202103 y 202104, valida en 202106 midiendo AUC, sin undersampling y sin las variables de préstamos personales. Se optimizan `num_iterations`, `num_leaves` y `min_sum_hessian_in_leaf`. Son 12 pruebas (el diseño inicial); se elige la de mayor AUC.
 6. Curva de ganancia en 202106, para mirar cuántos estímulos conviene enviar.
 7. Modelo final: entrena en 202103, 202104, 202105 y 202106, sin undersampling, con las variables de préstamos personales reincorporadas (rankeadas, igual que el resto). Ensamble de 30 LightGBM con los mismos hiperparámetros y distinta semilla; se promedian las probabilidades y se predice 202108.
-8. Se ordenan los clientes de mayor a menor probabilidad y se toman los primeros **11.250**. El corte se eligió comparando la curva de ganancia de junio con en el bot. Los archivos de 10.500 a 12.000 envíos: 11.250 queda en el centro de la zona más alta y pareja (11.000 a 11.500).
+8. Se ordenan los clientes de mayor a menor probabilidad y se toman los primeros **11.250**. El corte se eligió buscando el medio de una meseta y no un pico: en el público del bot, la zona más alta y pareja va de 11.000 a 11.500 envíos (tres cortes seguidos con casi la misma ganancia), y en la curva de ganancia de junio la meseta va de 10.500 a 14.000 envíos. 11.250 queda dentro de las dos.
 
 ## Reproducibilidad
 
