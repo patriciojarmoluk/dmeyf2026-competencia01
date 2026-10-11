@@ -15,9 +15,9 @@ No hace falta ningún otro archivo. El script descarga `competencia_01_crudo.csv
 
 ## Cómo correrlo
 
-En la VM de Google Cloud de la cátedra (8 vCPU), con cualquiera de estas dos formas:
+En la VM de Google Cloud, con cualquiera de estas dos formas:
 
-- Abrir `competencia01_final.R` como notebook (clic derecho, *Open With*, *Notebook*, kernel de R) y ejecutar todas las celdas en orden.
+- Abrir `competencia01_final.R` como notebook y ejecutar todas las celdas en orden.
 - Desde una terminal: `Rscript competencia01_final.R`
 
 El archivo de la entrega queda en:
@@ -41,13 +41,13 @@ Si la corrida se corta, se vuelve a lanzar desde el principio. La optimización 
 3. Ranking con cero fijo, mes por mes, de las 152 variables originales: los positivos quedan entre 0 y 1, los negativos entre -1 y 0, el cero queda en cero y los NA se dejan como NA.
 4. Feature engineering histórico, calculado sobre los rankings:
    - lags y deltas de orden 1 y 2;
-   - tendencia y promedio de los últimos 3 meses (función `TendenciaYmuchomas` publicada por Gustavo Denicolay).
+   - tendencia y promedio de los últimos 3 meses (función `TendenciaYmuchomas` publicada por Gustavo en Zulip).
 
    El modelo no ve valores en pesos: solo rankings y columnas derivadas de rankings. Son 1.064 variables predictoras (152 × 7). `numero_de_cliente` y `foto_mes` no son predictoras.
 5. Optimización de hiperparámetros con `mlr3mbo`: entrena en 202103 y 202104, valida en 202106 midiendo AUC, sin undersampling y sin las variables de préstamos personales. Se optimizan `num_iterations`, `num_leaves` y `min_sum_hessian_in_leaf`. Son 12 pruebas (el diseño inicial); se elige la de mayor AUC.
 6. Curva de ganancia en 202106, para mirar cuántos estímulos conviene enviar.
 7. Modelo final: entrena en 202103, 202104, 202105 y 202106, sin undersampling, con las variables de préstamos personales reincorporadas (rankeadas, igual que el resto). Ensamble de 30 LightGBM con los mismos hiperparámetros y distinta semilla; se promedian las probabilidades y se predice 202108.
-8. Se ordenan los clientes de mayor a menor probabilidad y se toman los primeros **11.250**. El corte se eligió comparando en el bot los archivos de 10.500 a 12.000 envíos: 11.250 queda en el centro de la zona más alta y pareja (11.000 a 11.500).
+8. Se ordenan los clientes de mayor a menor probabilidad y se toman los primeros **11.250**. El corte se eligió comparando la curva de ganancia de junio con en el bot. Los archivos de 10.500 a 12.000 envíos: 11.250 queda en el centro de la zona más alta y pareja (11.000 a 11.500).
 
 ## Reproducibilidad
 
